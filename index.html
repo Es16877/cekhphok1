@@ -1,93 +1,638 @@
-# Sample workflow for building and deploying a Next.js site to GitHub Pages
-#
-# To get started with Next.js see: https://nextjs.org/docs/getting-started
-#
-name: Deploy Next.js site to Pages
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Scatter Automation Dashboard | Advanced Queue Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["main"]
+        :root {
+            --bg-body: #0a0c12;
+            --bg-surface: #11131c;
+            --bg-card: #151a24;
+            --border-light: #1e2533;
+            --text-primary: #f0f3fa;
+            --text-secondary: #9aa3b9;
+            --accent: #10b981;
+            --accent-hover: #0e9f6e;
+            --danger: #f43f5e;
+            --warning: #f59e0b;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success-bg: rgba(16, 185, 129, 0.1);
+            --failed-bg: rgba(244, 63, 94, 0.1);
+            --pending-bg: rgba(245, 158, 11, 0.1);
+            --table-header: #0f121b;
+            --shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+        /* Top bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: var(--bg-surface);
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem;
+            border: 1px solid var(--border-light);
+            backdrop-filter: blur(4px);
+        }
 
-jobs:
-  # Build job
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            echo "runner=yarn" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            echo "runner=npx --no-install" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-        with:
-          # Automatically inject basePath in your Next.js configuration file and disable
-          # server side image optimization (https://nextjs.org/docs/api-reference/next/image#unoptimized).
-          #
-          # You may remove this line if you want to manage the configuration yourself.
-          static_site_generator: next
-      - name: Restore cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .next/cache
-          # Generate a new cache whenever packages or source files change.
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
-          # If source files changed but packages didn't, rebuild from a prior cache.
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
-      - name: Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
-      - name: Build with Next.js
-        run: ${{ steps.detect-package-manager.outputs.runner }} next build
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./out
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
 
-  # Deployment job
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        .dash-name {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #a5f3c3, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .top-nav ul {
+            display: flex;
+            gap: 0.5rem;
+            list-style: none;
+        }
+
+        .top-nav li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .top-nav li.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-card);
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #6b7280;
+        }
+
+        .status-dot.online {
+            background: #10b981;
+            box-shadow: 0 0 6px #10b981;
+        }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 1.5rem;
+            padding: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border: 1px solid var(--border-light);
+            transition: transform 0.2s;
+        }
+
+        .stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-icon.total { background: rgba(99,102,241,0.2); color: #818cf8; }
+        .stat-icon.success { background: rgba(16,185,129,0.2); color: #10b981; }
+        .stat-icon.failed { background: rgba(244,63,94,0.2); color: #f43f5e; }
+        .stat-icon.pending { background: rgba(245,158,11,0.2); color: #f59e0b; }
+
+        .stat-info h3 { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); }
+        .stat-info p { font-size: 2rem; font-weight: 800; line-height: 1; margin: 0.25rem 0; }
+
+        /* search bar */
+        .search-bar-wide {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .search-input-wrapper {
+            flex: 1;
+            background: var(--bg-card);
+            border-radius: 2rem;
+            padding: 0.7rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border: 1px solid var(--border-light);
+        }
+        .search-input-wrapper input {
+            background: transparent;
+            border: none;
+            flex: 1;
+            color: white;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        .main-card-v2 {
+            background: var(--bg-surface);
+            border-radius: 1.8rem;
+            padding: 1.2rem;
+            border: 1px solid var(--border-light);
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .card-header-v2 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .header-title-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .quick-token-wrapper {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+            top: 0;
+        }
+
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+
+        .filter-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: var(--bg-card);
+            padding: 0.3rem 1rem;
+            border-radius: 2rem;
+        }
+        .filter-buttons {
+            display: flex;
+            gap: 0.3rem;
+        }
+        .filter-buttons button {
+            background: transparent;
+            border: none;
+            padding: 0.3rem 0.9rem;
+            border-radius: 2rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .filter-buttons button.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .action-buttons-group {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .action-buttons-group button {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: 0.2s;
+            color: var(--text-primary);
+        }
+        .btn-grab { background: #2d3748; border-color: #4a5568; }
+        .btn-cek { background: #10b98120; border-color: #10b981; color: #10b981; }
+        .btn-recheck { background: #f59e0b20; border-color: #f59e0b; }
+        .btn-auto.active { background: #10b981; border-color: #10b981; color: white; }
+
+        .table-container-v2 {
+            overflow-x: auto;
+            border-radius: 1rem;
+        }
+
+        .scatter-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .scatter-table th {
+            text-align: left;
+            padding: 1rem 0.8rem;
+            background: var(--table-header);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .scatter-table td {
+            padding: 0.9rem 0.8rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .status-badge-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-badge-cell.success { background: var(--success-bg); color: #10b981; }
+        .status-badge-cell.failed { background: var(--failed-bg); color: #f43f5e; }
+        .status-badge-cell.pending { background: var(--pending-bg); color: #f59e0b; }
+
+        .btn-action {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+        }
+        .pagination-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .pagination-buttons button {
+            background: var(--bg-card);
+            border: none;
+            padding: 0.5rem 0.9rem;
+            border-radius: 0.8rem;
+            cursor: pointer;
+            color: white;
+        }
+
+        .config-card {
+            background: var(--bg-surface);
+            border-radius: 1.5rem;
+            padding: 2rem;
+        }
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px,1fr));
+            gap: 1.5rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .form-group input {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            padding: 0.8rem;
+            border-radius: 1rem;
+            color: white;
+        }
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--bg-surface);
+            border-left: 4px solid #10b981;
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            z-index: 1000;
+            box-shadow: var(--shadow-sm);
+        }
+        .hidden { display: none; }
+        button:active { transform: scale(0.97); }
+        .clock-box { display: flex; align-items: center; gap: 0.5rem; background: var(--bg-card); padding: 0.3rem 1rem; border-radius: 2rem; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <main class="main-content">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <div class="dash-name"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><span>SCATTER AUTO CEK</span></div>
+                <nav class="top-nav"><ul><li class="active" data-tab="dashboard"><span>Dashboard</span></li><li data-tab="config"><span>Settings</span></li></ul></nav>
+            </div>
+            <div class="top-bar-right"><div class="status-badge" id="extension-status"><span class="status-dot"></span><span class="status-text">Extension: Tidak Aktif</span></div><button class="theme-toggle" id="btn-theme-toggle" style="background:transparent; border:none; color:white;">🌙</button></div>
+        </header>
+
+        <section id="dashboard-tab">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-icon total">📋</div><div class="stat-info"><h3>Total Tiket</h3><p id="stat-total">0</p></div></div>
+                <div class="stat-card"><div class="stat-icon success">✓</div><div class="stat-info"><h3>Berhasil</h3><p id="stat-success">0</p></div></div>
+                <div class="stat-card"><div class="stat-icon failed">✗</div><div class="stat-info"><h3>Gagal</h3><p id="stat-failed">0</p></div></div>
+                <div class="stat-card"><div class="stat-icon pending">⏳</div><div class="stat-info"><h3>Pending</h3><p id="stat-pending">0</p></div></div>
+            </div>
+            <div class="search-bar-wide"><div class="search-input-wrapper"><input type="text" id="tx-search-wide" placeholder="Cari user/ticket/games/situs..."></div><div class="pagination-control"><span>Per halaman</span><select id="per-page"><option value="10">10</option><option value="25">25</option><option value="50" selected>50</option></select></div></div>
+
+            <div class="main-card-v2">
+                <div class="card-header-v2">
+                    <div class="header-title-group"><h2>Daftar Tiket Scatter</h2><p id="ticket-info"></p></div>
+                    <div class="quick-token-wrapper"><div class="quick-token-input" style="display:flex; background:#1e293b; padding:5px 15px; border-radius:40px;"><input type="text" id="config-token" placeholder="Token Auto-Capture" style="background:transparent; border:none; color:white; width:200px;"></div><div style="display:flex; gap:8px;"><button id="btn-quick-save-token" style="background:#10b981; border:none; border-radius:30px; padding:5px 20px; color:white;">Simpan Token</button><button id="btn-quick-clear-token" style="background:#f43f5e; border:none; border-radius:30px; padding:5px 20px; color:white;">Hapus</button></div></div>
+                    <div class="header-info-group"><div class="clock-box" id="current-clock"><span>--:--:--</span></div><div class="last-update"><span id="sync-status-text">☁️ Siap</span><br>Terakhir: <span id="last-update-time">-</span></div></div>
+                </div>
+                <div class="controls-row">
+                    <div class="filter-pill"><span>Filter:</span><div class="filter-buttons" id="status-filter-buttons"><button data-value="all" class="active">Semua</button><button data-value="pending">Pending</button><button data-value="success">Berhasil</button><button data-value="failed">Gagal</button></div></div>
+                    <div class="action-buttons-group"><button id="btn-grab">📥 Grab Tiket</button><button id="btn-check-all">✅ Cek Semua Pending</button><button id="btn-recheck">🔄 Recheck Gagal</button><button id="btn-auto-check">⚡ Auto Check OFF</button><button id="btn-refresh">🔄 Refresh</button><button id="btn-clear-data">🗑️ Hapus Data</button></div>
+                </div>
+                <div class="table-container-v2"><table class="scatter-table"><thead><tr><th>SITUS</th><th>USER ID</th><th>TIPE GAME</th><th>KODE TIKET</th><th>BETTING</th><th>SCATTER</th><th>KLAIM</th><th>STATUS & HASIL</th><th>AKSI</th></tr></thead><tbody id="results-body"><tr><td colspan="9" style="text-align:center;">Memuat data tiket...</td></tr></tbody></table></div>
+                <div class="pagination-container"><div class="pagination-info"><span id="page-indicator">Halaman 1</span></div><div class="pagination-buttons"><button id="btn-first-page">⏮</button><button id="btn-prev-page">◀</button><button id="btn-next-page">▶</button><button id="btn-last-page">⏭</button></div></div>
+            </div>
+        </section>
+
+        <section id="config-tab" class="hidden">
+            <div class="config-card"><h2>⚙️ Pengaturan Ekstensi & Sinkronisasi</h2><div class="settings-grid"><div class="form-group"><label>URL Admin Base</label><input type="text" id="config-admin-url" placeholder="https://ag-latoto.idrbo.com"></div><div class="form-group"><label>Google Script URL (Sync)</label><input type="text" id="config-gas-url" placeholder="https://script.google.com/macros/s/.../exec"></div><div class="form-group"><label>Nama Eksekutor</label><input type="text" id="config-executor" placeholder="Nama Anda"></div><div class="form-group"><label>Tanggal Mulai</label><input type="date" id="config-date-start"></div><div class="form-group"><label>Tanggal Akhir</label><input type="date" id="config-date-end"></div><div class="form-group"><label><input type="checkbox" id="config-auto-start"> Auto-start saat antrian masuk</label></div></div><div class="form-actions" style="margin-top:2rem;"><button id="btn-save-config" class="btn-primary" style="background:#6366f1; padding:0.8rem 2rem; border-radius:2rem; border:none; color:white;">💾 Simpan Perubahan</button></div></div>
+        </section>
+    </main>
+</div>
+<div id="toast" class="toast hidden">✅ <span id="toast-message"></span></div>
+
+<script>
+    // --- Data Mock + localStorage persistence ---
+    let tickets = [];
+    let currentFilter = "all";
+    let currentPage = 1;
+    let rowsPerPage = 50;
+    let searchKeyword = "";
+    let autoCheckInterval = null;
+    let autoActive = false;
+
+    // Config default
+    let appConfig = {
+        adminUrl: "https://ag-latoto.idrbo.com",
+        gasUrl: "",
+        executor: "Guest",
+        dateStart: "",
+        dateEnd: "",
+        autoStart: false,
+        authToken: ""
+    };
+
+    function loadFromStorage() {
+        const stored = localStorage.getItem("scatter_tickets");
+        if(stored) tickets = JSON.parse(stored);
+        else {
+            tickets = [
+                { id: "TKT001", situs: "Latoto", userId: "user123", game: "Slot", kode: "SCAT1", betting: "100.000", scatter: "3", klaim: "Belum", status: "pending", hasil: "-", tipeGame: "Slot" },
+                { id: "TKT002", situs: "Latoto", userId: "user456", game: "PG", kode: "SCAT2", betting: "250.000", scatter: "4", klaim: "Proses", status: "success", hasil: "Menang 500rb", tipeGame: "PG Soft" },
+                { id: "TKT003", situs: "Agen88", userId: "joko99", game: "Pragmatic", kode: "SCAT3", betting: "50.000", scatter: "2", klaim: "Gagal", status: "failed", hasil: "Scatter tidak valid", tipeGame: "Pragmatic" }
+            ];
+        }
+        const cfg = localStorage.getItem("scatter_config");
+        if(cfg) appConfig = { ...appConfig, ...JSON.parse(cfg) };
+        document.getElementById("config-executor").value = appConfig.executor;
+        document.getElementById("config-admin-url").value = appConfig.adminUrl;
+        document.getElementById("config-gas-url").value = appConfig.gasUrl;
+        document.getElementById("config-date-start").value = appConfig.dateStart;
+        document.getElementById("config-date-end").value = appConfig.dateEnd;
+        document.getElementById("config-auto-start").checked = appConfig.autoStart;
+        document.getElementById("config-token").value = appConfig.authToken || "";
+        document.getElementById("display-executor").innerText = appConfig.executor;
+        updateStatsAndRender();
+    }
+
+    function saveTickets() { localStorage.setItem("scatter_tickets", JSON.stringify(tickets)); updateStatsAndRender(); }
+    function saveConfig() { localStorage.setItem("scatter_config", JSON.stringify(appConfig)); document.getElementById("display-executor").innerText = appConfig.executor; showToast("Konfigurasi tersimpan"); }
+
+    function updateStatsAndRender() {
+        const total = tickets.length;
+        const success = tickets.filter(t=>t.status==="success").length;
+        const failed = tickets.filter(t=>t.status==="failed").length;
+        const pending = tickets.filter(t=>t.status==="pending").length;
+        document.getElementById("stat-total").innerText = total;
+        document.getElementById("stat-success").innerText = success;
+        document.getElementById("stat-failed").innerText = failed;
+        document.getElementById("stat-pending").innerText = pending;
+        renderTable();
+    }
+
+    function getFilteredTickets() {
+        let filtered = [...tickets];
+        if(currentFilter !== "all") filtered = filtered.filter(t=>t.status === currentFilter);
+        if(searchKeyword.trim() !== "") {
+            const kw = searchKeyword.toLowerCase();
+            filtered = filtered.filter(t=> t.userId?.toLowerCase().includes(kw) || t.kode?.toLowerCase().includes(kw) || t.situs?.toLowerCase().includes(kw) || t.game?.toLowerCase().includes(kw));
+        }
+        return filtered;
+    }
+
+    function renderTable() {
+        const filtered = getFilteredTickets();
+        const totalPages = Math.ceil(filtered.length / rowsPerPage);
+        if(currentPage > totalPages) currentPage = totalPages || 1;
+        const start = (currentPage-1)*rowsPerPage;
+        const pageData = filtered.slice(start, start+rowsPerPage);
+        const tbody = document.getElementById("results-body");
+        if(pageData.length === 0) { tbody.innerHTML = "<tr><td colspan='9'>Tidak ada tiket</td></tr>"; document.getElementById("ticket-info").innerText = `0 tiket`; document.getElementById("page-indicator").innerText = `Halaman 0 dari 0`; return; }
+        tbody.innerHTML = pageData.map(t => `
+            <tr>
+                <td>${escapeHtml(t.situs)}</td><td>${escapeHtml(t.userId)}</td><td>${escapeHtml(t.tipeGame || t.game)}</td>
+                <td>${escapeHtml(t.kode)}</td><td>${escapeHtml(t.betting)}</td><td>${escapeHtml(t.scatter)}</td>
+                <td>${escapeHtml(t.klaim)}</td>
+                <td><span class="status-badge-cell ${t.status}">${t.status.toUpperCase()} ${t.hasil ? `- ${t.hasil}` : ''}</span></td>
+                <td><button class="btn-action" data-id="${t.id}" data-action="recheck">🔄 Cek Ulang</button></td>
+            </tr>
+        `).join('');
+        document.getElementById("ticket-info").innerText = `Menampilkan ${pageData.length} dari ${filtered.length} tiket`;
+        document.getElementById("page-indicator").innerHTML = `Halaman ${currentPage} dari ${totalPages}`;
+        document.querySelectorAll(".btn-action").forEach(btn => {
+            btn.addEventListener("click", (e) => { const id = btn.getAttribute("data-id"); if(confirm("Cek ulang tiket ini?")) recheckSingleTicket(id); });
+        });
+    }
+
+    function recheckSingleTicket(id) {
+        const idx = tickets.findIndex(t=>t.id===id);
+        if(idx !== -1 && tickets[idx].status !== "success") {
+            tickets[idx].status = Math.random() > 0.3 ? "success" : "failed";
+            tickets[idx].hasil = tickets[idx].status === "success" ? "Auto-verif: Menang" : "Gagal verifikasi";
+            if(tickets[idx].status === "success") tickets[idx].klaim = "Sukses";
+            saveTickets();
+            showToast(`Tiket ${id} diperbarui menjadi ${tickets[idx].status}`);
+        } else showToast("Tiket sudah success atau tidak ditemukan");
+    }
+
+    function grabNewTicket() {
+        const newId = "TKT" + (tickets.length+1).toString().padStart(3,'0');
+        tickets.unshift({ id: newId, situs: "New Site", userId: "new_user", game: "Slot", kode: `SCAT_${Date.now()}`, betting: "10.000", scatter: "2", klaim: "Pending", status: "pending", hasil: "Menunggu", tipeGame: "Auto" });
+        saveTickets();
+        showToast(`Tiket baru ditambahkan: ${newId}`);
+    }
+
+    function checkAllPending() {
+        let changed=0;
+        tickets.forEach(t=>{ if(t.status==="pending"){ t.status=Math.random()>0.2?"success":"failed"; t.hasil=t.status==="success"?"Valid":"Invalid"; changed++; } });
+        saveTickets();
+        showToast(`${changed} tiket pending diproses`);
+    }
+
+    function recheckFailed() {
+        let changed=0;
+        tickets.forEach(t=>{ if(t.status==="failed"){ t.status=Math.random()>0.5?"success":"failed"; t.hasil=t.status==="success"?"Recheck Sukses":"Tetap Gagal"; changed++; } });
+        saveTickets();
+        showToast(`${changed} tiket gagal di-recheck`);
+    }
+
+    function toggleAutoCheck() {
+        autoActive = !autoActive;
+        const btn = document.getElementById("btn-auto-check");
+        if(autoActive) {
+            btn.innerHTML = "⏸️ Auto Check ON";
+            btn.style.background = "#10b981";
+            autoCheckInterval = setInterval(()=>{ checkAllPending(); }, 15000);
+            showToast("Mode Auto-Check Aktif (setiap 15 detik)");
+        } else {
+            btn.innerHTML = "⚡ Auto Check OFF";
+            btn.style.background = "";
+            if(autoCheckInterval) clearInterval(autoCheckInterval);
+            showToast("Auto Check dimatikan");
+        }
+    }
+
+    function clearAllData() {
+        if(confirm("Hapus semua data tiket? Tindakan permanen!")){ tickets = []; saveTickets(); showToast("Semua data dihapus"); }
+    }
+
+    function refreshData() {
+        updateStatsAndRender();
+        showToast("Data dimuat ulang");
+        document.getElementById("last-update-time").innerText = new Date().toLocaleTimeString();
+    }
+
+    // Token quick
+    document.getElementById("btn-quick-save-token")?.addEventListener("click",()=>{
+        const token = document.getElementById("config-token").value;
+        appConfig.authToken = token;
+        saveConfig();
+        showToast("Token tersimpan untuk komunikasi ekstensi");
+    });
+    document.getElementById("btn-quick-clear-token")?.addEventListener("click",()=>{
+        document.getElementById("config-token").value = "";
+        appConfig.authToken = "";
+        saveConfig();
+        showToast("Token dihapus");
+    });
+
+    function showToast(msg){ const toast=document.getElementById("toast"); document.getElementById("toast-message").innerText=msg; toast.classList.remove("hidden"); setTimeout(()=>toast.classList.add("hidden"),2500); }
+    function escapeHtml(str){ if(!str) return ""; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    // Clock & UI
+    function updateClock(){ const now = new Date(); document.getElementById("current-clock").innerHTML = `<span>${now.toLocaleTimeString()}</span>`; }
+    setInterval(updateClock,1000);
+    updateClock();
+
+    // Event binding
+    document.getElementById("btn-grab")?.addEventListener("click", grabNewTicket);
+    document.getElementById("btn-check-all")?.addEventListener("click", checkAllPending);
+    document.getElementById("btn-recheck")?.addEventListener("click", recheckFailed);
+    document.getElementById("btn-auto-check")?.addEventListener("click", toggleAutoCheck);
+    document.getElementById("btn-refresh")?.addEventListener("click", refreshData);
+    document.getElementById("btn-clear-data")?.addEventListener("click", clearAllData);
+    document.getElementById("btn-save-config")?.addEventListener("click", ()=>{
+        appConfig.executor = document.getElementById("config-executor").value;
+        appConfig.adminUrl = document.getElementById("config-admin-url").value;
+        appConfig.gasUrl = document.getElementById("config-gas-url").value;
+        appConfig.dateStart = document.getElementById("config-date-start").value;
+        appConfig.dateEnd = document.getElementById("config-date-end").value;
+        appConfig.autoStart = document.getElementById("config-auto-start").checked;
+        saveConfig();
+        showToast("Pengaturan disimpan");
+    });
+    document.getElementById("tx-search-wide")?.addEventListener("input", (e)=>{ searchKeyword = e.target.value; currentPage=1; renderTable(); });
+    document.getElementById("per-page")?.addEventListener("change", (e)=>{ rowsPerPage = parseInt(e.target.value); currentPage=1; renderTable(); });
+    document.querySelectorAll("#status-filter-buttons button").forEach(btn=>{ btn.addEventListener("click",()=>{ document.querySelectorAll("#status-filter-buttons button").forEach(b=>b.classList.remove("active")); btn.classList.add("active"); currentFilter = btn.getAttribute("data-value"); currentPage=1; renderTable(); }); });
+    document.getElementById("btn-first-page")?.addEventListener("click",()=>{ currentPage=1; renderTable(); });
+    document.getElementById("btn-prev-page")?.addEventListener("click",()=>{ if(currentPage>1){ currentPage--; renderTable(); } });
+    document.getElementById("btn-next-page")?.addEventListener("click",()=>{ const total=Math.ceil(getFilteredTickets().length/rowsPerPage); if(currentPage<total){ currentPage++; renderTable(); } });
+    document.getElementById("btn-last-page")?.addEventListener("click",()=>{ const total=Math.ceil(getFilteredTickets().length/rowsPerPage); if(total>0) currentPage=total; renderTable(); });
+    // Tabs
+    document.querySelectorAll(".top-nav li").forEach(tab=>{ tab.addEventListener("click",()=>{ const target = tab.getAttribute("data-tab"); document.querySelectorAll(".top-nav li").forEach(t=>t.classList.remove("active")); tab.classList.add("active"); if(target==="dashboard"){ document.getElementById("dashboard-tab").classList.remove("hidden"); document.getElementById("config-tab").classList.add("hidden"); } else { document.getElementById("dashboard-tab").classList.add("hidden"); document.getElementById("config-tab").classList.remove("hidden"); } }); });
+    // extension simulation
+    const extDot = document.querySelector("#extension-status .status-dot");
+    const extText = document.querySelector("#extension-status .status-text");
+    function simulateExtension(){ extDot.classList.add("online"); extText.innerText = "Extension: Terhubung (Mock)"; }
+    simulateExtension();
+    loadFromStorage();
+    // extra: auto-start hook
+    if(appConfig.autoStart && !autoActive){ setTimeout(()=>{ toggleAutoCheck(); }, 1000); }
+</script>
+</body>
+</html>
